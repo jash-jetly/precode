@@ -204,7 +204,7 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">{appName || 'Brainstorming Session'}</h1>
-              <p className="text-sm text-neutral-dark">Chat with Gemini 2.5 Flash</p>
+              <p className="text-sm text-neutral-dark">Chat with PRECODE.AI</p>
             </div>
             <button
               onClick={handleEndBrainstorming}

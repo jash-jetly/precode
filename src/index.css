@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles for redesigned UI */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb; /* Light neutral background */
+  color: #1f2937; /* Dark gray text */
+}
+
+button {
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

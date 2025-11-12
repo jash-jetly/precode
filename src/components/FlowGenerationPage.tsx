@@ -167,7 +167,6 @@ export default function FlowGenerationPage({
               <h3 className="text-xl font-semibold mb-2">Ready to Generate</h3>
               <p className="text-slate-400 mb-6 max-w-md mx-auto">
                 Click below to generate a comprehensive user flow diagram based on your brainstorming
-                session with Gemini 2.5 Flash
               </p>
               <button
                 onClick={handleGenerateFlow}

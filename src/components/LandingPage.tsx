@@ -36,7 +36,7 @@ export default function LandingPage({ onStartBrainstorm }: LandingPageProps) {
               </div>
               <h3 className="text-xl font-semibold mb-2">AI-Powered Brainstorming</h3>
               <p className="text-neutral-dark">
-                Chat with Gemini 2.5 Flash to refine your idea through intelligent questions
+                Chat with PRECODE.AI to refine your idea through intelligent questions
               </p>
             </div>
 

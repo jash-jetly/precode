@@ -1,6 +1,3 @@
-// Updated ChatInterface.tsx with modern UI design
-// Changes include updated colors, spacing, and typography for better aesthetics
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Bot, User } from 'lucide-react';
 import { ChatMessage } from '../types';
@@ -134,7 +131,7 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
       setMessages(prev => [...prev, aiMessage]);
       setHasStarted(true);
     } catch (error) {
-      console.error('Error starting chat:', error);
+      console.error('Error starting chat:');
     } finally {
       setIsLoading(false);
     }
@@ -202,7 +199,84 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
 
   return (
     <div className="min-h-screen bg-neutral-light text-neutral-dark">
-      {/* Chat interface content */}
+      <div className="border-b border-neutral-dark bg-neutral-light/80 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">{appName || 'Brainstorming Session'}</h1>
+              <p className="text-sm text-neutral-dark">Chat with Gemini 2.5 Flash</p>
+            </div>
+            <button
+              onClick={handleEndBrainstorming}
+              className="px-4 py-2 bg-accent-dark hover:bg-accent-light rounded-lg font-semibold transition-colors duration-200 text-neutral-light"
+            >
+              End Brainstorming
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-6 py-6">
+        <div className="grid grid-rows-[1fr_auto] h-[calc(100vh-140px)] max-w-4xl mx-auto">
+          <div className="overflow-y-auto space-y-4 pr-2">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xl rounded-xl p-4 ${
+                  message.role === 'user'
+                    ? 'bg-accent-dark text-neutral-light'
+                    : 'bg-neutral-light border border-neutral-dark text-neutral-dark'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {message.role === 'user' ? (
+                      <User className="w-4 h-4" />
+                    ) : (
+                      <Bot className="w-4 h-4" />
+                    )}
+                    <span className="text-xs opacity-70">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="whitespace-pre-wrap">
+                    {message.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-end gap-3">
+              <textarea
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={isLoading}
+                placeholder="Type your message..."
+                rows={3}
+                className="flex-1 px-4 py-3 bg-neutral-light border border-neutral-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-light text-neutral-dark placeholder-neutral-dark resize-none"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
+                className="inline-flex items-center gap-2 px-4 py-3 bg-accent-dark hover:bg-accent-light rounded-lg font-semibold transition-colors duration-200 text-neutral-light disabled:bg-neutral-dark disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

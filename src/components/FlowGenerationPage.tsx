@@ -180,7 +180,7 @@ export default function FlowGenerationPage({
           {isGenerating && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-12 h-12 animate-spin text-cyan-400 mb-4" />
-              <p className="text-slate-300 font-medium">Generating user flow with Gemini 2.5 Flash...</p>
+              <p className="text-slate-300 font-medium">Generating user flow with PRECODE.AI...</p>
               <p className="text-sm text-slate-500 mt-2">This may take a moment</p>
             </div>
           )}

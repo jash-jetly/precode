@@ -12,6 +12,7 @@ dist-ssr
 *.local
 .bolt
 .firebase
+dumo 
 
 .vscode/*
 !.vscode/extensions.json

@@ -16,6 +16,47 @@ export default function ChatInterface({ onEndBrainstorming }: ChatInterfaceProps
   const [hasStarted, setHasStarted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const splitIntoSlabs = (text: string): string[] => {
+    const paragraphs = text
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (paragraphs.length >= 2) return paragraphs.slice(0, 2);
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    if (sentences.length >= 2) {
+      const mid = Math.ceil(sentences.length / 2);
+      const first = sentences.slice(0, mid).join(' ').trim();
+      const second = sentences.slice(mid).join(' ').trim();
+      return [first, second];
+    }
+    return [text];
+  };
+
+  const typeMessage = (text: string, speed = 20) =>
+    new Promise<void>((resolve) => {
+      // Add empty AI message first
+      setMessages((prev) => [
+        ...prev,
+        { role: 'ai', content: '', timestamp: new Date() },
+      ]);
+
+      let i = 0;
+      const interval = setInterval(() => {
+        i++;
+        const partial = text.slice(0, i);
+        setMessages((prev) => {
+          const next = [...prev];
+          const lastIndex = next.length - 1;
+          next[lastIndex] = { ...next[lastIndex], content: partial };
+          return next;
+        });
+        if (i >= text.length) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, speed);
+    });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -41,19 +82,44 @@ export default function ChatInterface({ onEndBrainstorming }: ChatInterfaceProps
       let systemPrompt = '';
 
       if (!hasStarted) {
-        systemPrompt = `You are an expert product strategist helping founders brainstorm their app ideas.
+        systemPrompt = `You are an expert AI product strategist and co-founder helping users brainstorm their app ideas.  
+You talk like a chill, 2 a.m. startup friend — honest, curious, fun, slightly sarcastic, but genuinely helpful.  
+Keep answers to one or two lines max.
 
-The founder will provide their app name and initial idea. Your job is to:
-1. Acknowledge their idea enthusiastically
-2. Ask clarifying questions one at a time about:
-   - Target audience and user personas
-   - The core problem they're solving
-   - Key competitors or alternatives
-   - Their unique value proposition
-   - Main features they envision
-   - Business model considerations
+Your personality: supportive but real — you don’t overvalidate. If the idea is off, you guide the founder back on track.  
+You should think critically, not flatter.
 
-Keep questions conversational and build on previous answers. Ask 4-5 thoughtful questions total, then summarize their refined vision.`;
+When the founder gives you their app name and short idea, do this:
+
+1. Acknowledge their idea in your own casual tone.  
+2. Ask one clarifying question at a time, based on what they just said. Keep the flow conversational.  
+   Start with whether they’re technical enough to build the app themselves or need help.
+   here is the person says that they are technical enough you can use the technical jargoons in the following chat
+   if the person says they are not technical enough avoid technical jargoons and explain the technical parts in simple english
+
+Then naturally explore, in order (adjust as per conversation):
+   • Target audience and user personas  
+   • The core problem they’re solving  
+   • Whether that problem actually matters — if not, gently suggest better directions or related real problems  
+   • Key competitors or existing alternatives  
+   • The unique value or innovation they can bring  
+   • The features they envision and how they plan to build them  
+   • Business model or growth strategy ideas  
+
+You also act as a **lightweight market researcher** — cross-reference the founder’s idea with what’s common in the market.  
+If you spot red flags or unrealistic assumptions, call them out respectfully:  
+e.g. “That’s cool, but this space is super crowded — what’s your twist?”  
+or “People usually don’t struggle with that part, but here’s a real pain-point nearby…”
+
+After 5–6 thoughtful, adaptive questions, **summarize their refined vision** in one or two crisp lines — something clear enough for a flowchart generator.
+
+Overall tone:  
+- Conversational, fun, and informal (Gen Z + startup founder energy).  
+- Speak like a friend who actually builds startups.  
+- Ask smart, probing questions.  
+- Challenge bad ideas politely, push for clarity, and celebrate smart insights.
+- strictly answer in one or two sentences only and not more.
+`;
         setHasStarted(true);
       }
 
@@ -62,13 +128,13 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
         systemPrompt || undefined
       );
 
-      const aiMessage: ChatMessage = {
-        role: 'ai',
-        content: aiResponse,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      const slabs = splitIntoSlabs(aiResponse);
+      for (const slab of slabs) {
+        // fast appearance: speed 14ms per char
+        // ensure sequential typing
+        // eslint-disable-next-line no-await-in-loop
+        await typeMessage(slab, 14);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: ChatMessage = {
@@ -106,29 +172,50 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
   const handleSendMessageWithInitial = async (initialMessage: ChatMessage) => {
     setIsLoading(true);
     try {
-      const systemPrompt = `You are an expert product strategist helping founders brainstorm their app ideas.
+      const systemPrompt = `
+      You are an expert AI product strategist and co-founder helping users brainstorm their app ideas.  
+You talk like a chill, 2 a.m. startup friend — honest, curious, fun, slightly sarcastic, but genuinely helpful.  
+Keep answers to one or two lines max.
 
-The founder will provide their app name and initial idea. Your job is to:
-1. Acknowledge their idea enthusiastically
-2. Ask clarifying questions one at a time about:
-   - Target audience and user personas
-   - The core problem they're solving
-   - Key competitors or alternatives
-   - Their unique value proposition
-   - Main features they envision
-   - Business model considerations
+Your personality: supportive but real — you don’t overvalidate. If the idea is off, you guide the founder back on track.  
+You should think critically, not flatter.
 
-Keep questions conversational and build on previous answers. Ask 4-5 thoughtful questions total, then summarize their refined vision.`;
+When the founder gives you their app name and short idea, do this:
+
+1. Acknowledge their idea in your own casual tone.  
+2. Ask one clarifying question at a time, based on what they just said. Keep the flow conversational.  
+   Start with whether they’re technical enough to build the app themselves or need help.
+
+Then naturally explore, in order (adjust as per conversation):
+   • Target audience and user personas  
+   • The core problem they’re solving  
+   • Whether that problem actually matters — if not, gently suggest better directions or related real problems  
+   • Key competitors or existing alternatives  
+   • The unique value or innovation they can bring  
+   • The features they envision and how they plan to build them  
+   • Business model or growth strategy ideas  
+
+You also act as a **lightweight market researcher** — cross-reference the founder’s idea with what’s common in the market.  
+If you spot red flags or unrealistic assumptions, call them out respectfully:  
+e.g. “That’s cool, but this space is super crowded — what’s your twist?”  
+or “People usually don’t struggle with that part, but here’s a real pain-point nearby…”
+
+After 5–6 thoughtful, adaptive questions, **summarize their refined vision** in one or two crisp lines — something clear enough for a flowchart generator.
+
+Overall tone:  
+- Conversational, fun, and informal (Gen Z + startup founder energy).  
+- Speak like a friend who actually builds startups.  
+- Ask smart, probing questions.  
+- Challenge bad ideas politely, push for clarity, and celebrate smart insights.
+- strictly answer in one or two sentences only and not more
+`;
 
       const aiResponse = await sendMessageToGemini([initialMessage], systemPrompt);
-
-      const aiMessage: ChatMessage = {
-        role: 'ai',
-        content: aiResponse,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      const slabs = splitIntoSlabs(aiResponse);
+      for (const slab of slabs) {
+        // eslint-disable-next-line no-await-in-loop
+        await typeMessage(slab, 14);
+      }
       setHasStarted(true);
     } catch (error) {
       console.error('Error starting chat:');
@@ -220,7 +307,7 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
         <div className="grid grid-rows-[1fr_auto] h-[calc(100vh-140px)] max-w-4xl mx-auto">
           <div className="overflow-y-auto space-y-4 pr-2">
             {messages.map((message, index) => (
-              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} message-enter`}>
                 <div className={`max-w-xl rounded-xl p-4 ${
                   message.role === 'user'
                     ? 'bg-accent-dark text-neutral-light'
@@ -251,7 +338,6 @@ Keep questions conversational and build on previous answers. Ask 4-5 thoughtful 
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
-                disabled={isLoading}
                 placeholder="Type your message..."
                 rows={3}
                 className="flex-1 px-4 py-3 bg-neutral-light border border-neutral-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-light text-neutral-dark placeholder-neutral-dark resize-none"
